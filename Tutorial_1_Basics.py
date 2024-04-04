@@ -8,11 +8,11 @@ from stable_baselines3.common.callbacks import EvalCallback, StopTrainingOnRewar
 
 Test_env= False
 Train_agent = False
-Test_evaluation = False
+Test_evaluation = True
 Use_the_agent = False
 Train_with_callbacks = False
 Train_with_mod_NN = False
-Train_with_diff_alg = True
+Train_with_diff_alg = False
 
 
 #########################

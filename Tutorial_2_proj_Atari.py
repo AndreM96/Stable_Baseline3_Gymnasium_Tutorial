@@ -15,6 +15,7 @@ Train_agent = False
 
 environment_name = 'Breakout-v4'
 env = gym.make(environment_name, render_mode='human')
+env.metadata['render_fps'] = 30 # set fps for rendering
 
 print(env.observation_space)
 print(env.action_space)
@@ -73,11 +74,15 @@ else:
 ########################
 
 print('Evaluating the model')
-# To evaluate the model we have to define a env that is not vectorized
+# To evaluate the model we have to define a env that is not vectorized, but need to be stacked
 env = make_atari_env(environment_name, n_envs=1, seed=0)
 env = VecFrameStack(env, n_stack=4)
 
-mean_rew, std_rew = evaluate_policy(model, env, n_eval_episodes=10, render=False) # The evaluate_policy function is used to evaluate the model. The model parameter specifies the model to evaluate. The env parameter specifies the environment to use. The n_eval_episodes=10 parameter specifies that the model should be evaluated over ten episodes. The render=True parameter specifies that the evaluation should be rendered to the screen.
+env.metadata['render_fps'] = 30 # set fps for rendering
+env.metadata['render_modes'] = 'human'
+
+mean_rew, std_rew = evaluate_policy(model, env, n_eval_episodes=10, render=True) # The evaluate_policy function is used to evaluate the model. The model parameter specifies the model to evaluate. The env parameter specifies the environment to use. The n_eval_episodes=10 parameter specifies that the model should be evaluated over ten episodes. The render=True parameter specifies that the evaluation should be rendered to the screen.
 print(f'Mean reward: {mean_rew} +/- {std_rew}')
 
 # Note: in this case you can see that the model is not performing well. This is because the model is not trained for long enough. To improve the performance of the model, you can train it for more timesteps.
+
