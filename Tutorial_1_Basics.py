@@ -174,7 +174,7 @@ from stable_baselines3 import DQN
 
 if Train_with_diff_alg:
     print('Training the agent with DQN algorithm')
-    DQN_path = os.path.join('Training', 'Logs', 'DQN_Model_CartPole')
+    DQN_path = os.path.join('Training', 'Saved Models', 'DQN_Model_CartPole')
     model = DQN('MlpPolicy', env, verbose = 1, tensorboard_log=log_path) # Create a DQN model
     model.learn(total_timesteps=20000) # Train the model for 20000 timesteps (iterations)
     model.save(DQN_path)
