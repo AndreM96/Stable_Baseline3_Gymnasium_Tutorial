@@ -59,7 +59,7 @@ log_path = os.path.join('Training', 'Logs')
 PPO_path = os.path.join('Training', 'Saved Models', 'PPO_Model_CartPole')
 
 env = DummyVecEnv([lambda: env]) # The environment must be wrapped in DummyVecEnv (vectorized environment) to be used with Stable Baselines. Lambda is used to create a function that returns the environment.
-
+                                 # Here we did not vectorize the environment, see Tutorial 2. vectorize = run multiple environments in parallel, speeding up training
 if Train_agent:
     print('Training the agent')
     model = PPO('MlpPolicy', env, verbose = 1, tensorboard_log=log_path) # Create a PPO model: agent with a Multi-Layer Perceptron (Mlp) policy (structure of the NN) and the environment. (verbose = 1) to see the training process.
