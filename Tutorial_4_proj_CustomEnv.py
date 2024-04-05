@@ -11,8 +11,9 @@ import random
 import os
 
 Analyse_space = False 
-Test_env = True  
-Train_agent = True
+Test_env = False  
+Train_agent = False
+Use_the_agent = True
 
 
 #############################
@@ -82,24 +83,25 @@ class ShowerEnv(Env):
 ## Test the environment ##
 ##########################
 
-env0 = ShowerEnv()
+my_env = ShowerEnv()
+my_env = DummyVecEnv([lambda: my_env])
 
 
 if Test_env:
     print('Testing the environment')
     episodes = 5
     for episode in range(1, episodes+1):
-        state = env0.reset()
+        state = my_env.reset()
         done = False
         score = 0
 
         while not done:
-            action = env0.action_space.sample()
-            obs, reward, done, trun, info = env0.step(action)
+            action = my_env.action_space.sample()
+            obs, reward, done, trun, info = my_env.step(action)
             score += reward
             
         print(f'Episode: {episode}, Score: {score}')
-    env0.close()
+    my_env.close()
 
 ####################
 ## Train an agent ##
@@ -107,16 +109,39 @@ if Test_env:
 
 log_path = os.path.join('Training', 'Logs')
 PPO_path = os.path.join('Training', 'Saved Models', 'PPO_Model_Shower')
-#env = DummyVecEnv([lambda: env0])
+
 
 if Train_agent:
-    model = PPO('MlpPolicy', env0, verbose=1, tensorboard_log=log_path)
-    model.learn(total_timesteps=5000)
+    model = PPO('MlpPolicy', my_env, verbose=1, tensorboard_log=log_path)
+    model.learn(total_timesteps=100000)
     model.save(PPO_path)
 else:
-    model = PPO.load(PPO_path, env=env0)
+    model = PPO.load(PPO_path, env=my_env)
 
 
 ##########################
 ## Test the environment ##
 ##########################
+
+print('Evaluating the model')
+mean_rew, std_rew = evaluate_policy(model, my_env, n_eval_episodes=100, render=False) # The evaluate_policy function is used to evaluate the model. The model parameter specifies the model to evaluate. The env parameter specifies the environment to use. The n_eval_episodes=10 parameter specifies that the model should be evaluated over ten episodes. The render=True parameter specifies that the evaluation should be rendered to the screen.
+print(f'Mean reward: {mean_rew} +/- {std_rew}')
+
+# Note: in this case you can see that the model is not performing well. This is because the model is not trained for long enough. To improve the performance of the model, you can train it for more timesteps.
+
+if Use_the_agent:
+    print('Using the agent')
+    episodes = 50
+    for episode in range(1, episodes+1):
+        obs = my_env.reset()
+        done = False
+        score = 0
+
+        while not done:
+            my_env.render()
+            action, _ = model.predict(obs) # The model predicts the action to take based on the observation. output: action and the value of the next state (used in recurrent policies)
+            obs, reward, done, info = my_env.step(action) # The environment takes the action and returns the new observation, the reward, if the episode is done, and additional information
+            score += reward
+            
+        print(f'Episode: {episode}, Score: {score}')
+    my_env.close()

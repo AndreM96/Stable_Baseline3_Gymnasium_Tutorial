@@ -98,6 +98,11 @@ print(f'Mean reward: {mean_rew} +/- {std_rew}')
 
 # Note: in this case you can see that the model is not performing well. This is because the model is not trained for long enough. To improve the performance of the model, you can train it for more timesteps.
 
+
+###################
+## Use the Agent ##
+###################
+
 if Use_the_agent:
     print('Using the agent')
     episodes = 100
