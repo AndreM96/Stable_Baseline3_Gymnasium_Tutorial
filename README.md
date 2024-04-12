@@ -11,8 +11,9 @@ Main Requirements:
 - Gymnasium: 
     pip install gymnasium
 - Gymnasium atari:
-     pip install gymnasium[atari]
-     pip install gymnasium[accept-rom-license]
+     - pip install gymnasium[atari]
+     - pip install gymnasium[accept-rom-license]
+     - pip install gymnasium[box2d]
 - Swig:
      apt-get install swig
 
