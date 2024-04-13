@@ -1,1 +1,0 @@
-# to do: https://ashbabu.github.io/blog/2019/Custom-MuJoCo-Environment/
