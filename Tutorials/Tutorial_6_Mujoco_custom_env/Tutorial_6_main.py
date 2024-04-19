@@ -13,14 +13,14 @@ import numpy as np
 import os
  
 Test_env = False
-Train_agent = True
+Train_agent = False
 Test_evaluation = False
-Use_the_agent = False
+Use_the_agent = True
 
 print('Loading the environment')
 
 #environment_id = 
-env = gym.make('ManipulateCableEnv-v0', render_mode='rgb_array', max_episode_steps=100)
+env = gym.make('ManipulateCableEnv-v0', render_mode='human', max_episode_steps=100)
 
 # Analize the environment
 #print(env.observation_space)
@@ -64,7 +64,7 @@ if Train_agent:
                                                                          # The tensorboard_log parameter allows to log the training process and visualize it in tensorboard.
     # help(PPO) # To see the documentation of the model
 
-    model.learn(total_timesteps=100000) # Train the model for 20000 timesteps (iterations)   
+    model.learn(total_timesteps=1000000) # Train the model for 20000 timesteps (iterations)   
     model.save(PPO_path) # Save the model
 else:
     model = PPO.load(PPO_path, env =env)  # Load the model
