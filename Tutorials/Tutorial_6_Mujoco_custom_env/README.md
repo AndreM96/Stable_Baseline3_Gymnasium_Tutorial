@@ -19,15 +19,14 @@ Before running the code in this tutorial, make sure you have the following prere
 
 ## Getting Started
 
-The repository is organized as follows:
+In the repository you will find:
 
-- Three files are used to describe the agent, the environment and initialize the task, these are:
+- *robot_env.py* : This file contains the parent classes where the basic attributes and methods are defined. Then, these classes will be inherited by the classes defined in the following scripts. Here,the action and observation spaces are defined.
+- *slider_env.py* : This file defines the agent. It allows you to set the variables you want to observe, the action you want the agent to perform, and the reward policy. In this file, you will also interface with Mujoco to retrieve information about the state of the variables of interest and set the subsequent actions to run the Mujoco simulation.
+- *manipulate_cable.py* : This file initializes the environment. Here, you can set various arguments such as the model path, initial joint position, and distance threshold. Additionally, the developed environment is registered as a Gymnasium environment. For a more detailed description of the environment, refer to this file.
 
 **!! REMARK !!** In each of these files you will find two types of classes: MujocoPy...Env and Mujoco...Env (e.g. In slider.py you will find the class MujocoPySliderEnv and the class MujocoSliderEnv). These classes allow the interface with the Mujoco engine, let it possible to retrieve the information about the state or set the action of our varibles of interest. They are defined in the same way and with the same structure, the use of one or the other depends on the Mujoco Python bindings used. The class MujocoPy...Env depends on `mujoco_py` which is no longer maintained. On the other hand, the class Mujoco...Env depends on the newest [mujoco python bindings](https://mujoco.readthedocs.io/en/latest/python.html) maintained by the MuJoCo team in Deepmind. The latter is the class used for this tutorial.
 
-    - *robot_env.py* : This file contains the parent classes where the basic attributes and methods are defined. Then, these classes will be inherited by the classes defined in the following scripts. Here,the action and observation spaces are defined.
-    - *slider_env.py* : This file defines the agent. It allows you to set the variables you want to observe, the action you want the agent to perform, and the reward policy. In this file, you will also interface with Mujoco to retrieve information about the state of the variables of interest and set the subsequent actions to run the Mujoco simulation.
-    - *manipulate_cable.py* : This file initializes the environment. Here, you can set various arguments such as the model path, initial joint position, and distance threshold. Additionally, the developed environment is registered as a Gymnasium environment. For a more detailed description of the environment, refer to this file.
 
 - The main: *Tutorial_6_main.py* creates the environment and then the RL algorithm can be applied, it follows the same structure as Tutorial 1,2,3
 
