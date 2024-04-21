@@ -221,7 +221,7 @@ class MujocoPySliderEnv(get_base_slider_env(MujocoPyRobotEnv)):
 
         # Move end effector into position.
         slider_target = np.array(
-            [0.7, 0, 0.6 ]
+            [0, 0, 0 ]
         ) + self.sim.data.get_site_xpos("slider:site")
         slider_rotation = np.array([1.0, 0.0, 0.0, 0.0])
         self.sim.data.set_mocap_pos("slider:mocap", slider_target)

@@ -19,7 +19,7 @@ Use_the_agent = True
 
 print('Loading the environment')
 
-#environment_id = 
+#When train the model remember to change the render_mode to 'rgb_array' to not visualize the environment and reduce the computation time
 env = gym.make('ManipulateCableEnv-v0', render_mode='human', max_episode_steps=100)
 
 # Analize the environment
