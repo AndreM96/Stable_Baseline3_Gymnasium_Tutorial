@@ -292,13 +292,18 @@ class MujocoSliderEnv(get_base_slider_env(MujocoRobotEnv)):
             self.data.act[:] = None
 
         # Randomize start position of the slider.
-        slider_xpos = 0.7 + self.np_random.uniform(
-                    -self.sld_range, self.sld_range, size=1
-                )
+        #slider_xpos = self.initial_slider_xpos[0] + self.np_random.uniform(
+        #            -self.sld_range, self.sld_range, size=1
+        #        )
         slider_qpos = self._utils.get_joint_qpos(
                 self.model, self.data,"slider:joint")
+        #print("slider_qpos", slider_qpos)
         assert slider_qpos.shape == (1,)
-        slider_qpos[:1] = slider_xpos
+        #slider_qpos[:1] = slider_xpos
+        slider_qpos = slider_qpos + self.np_random.uniform(
+                    -0.3, 0.1, size=1
+                ) #-0.3 and 0.1 are chosen because 0.69 is the x position of the slider in the xml file, the the initial q_pos is set to -0.1 so the initial position in the simulation of the slider is of 0.59.
+        # When startin a new simulation the slider_qpos value will be added to this value (0.59 + slider_qpos) this means that the slider will start at a point in a range of 0.29 and 0.69. In this way the cable will not start totally streched.  
         self._utils.set_joint_qpos(
                 self.model, self.data,"slider:joint", slider_qpos)
         
