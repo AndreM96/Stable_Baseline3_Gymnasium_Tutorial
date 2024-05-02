@@ -67,7 +67,10 @@ if Train_agent:
     model.learn(total_timesteps=1000000) # Train the model for 20000 timesteps (iterations)   
     model.save(PPO_path) # Save the model
 else:
-    model = PPO.load(PPO_path, env =env)  # Load the model
+    print('Loading the model')
+    env = Monitor(env, log_path) # Monitor the environment to log the training process and visualize it in tensorboard
+    model = PPO.load(PPO_path,env=env)  # Load the model
+    env1 = model.get_env() # Get the environment used by the model
 
 #################################
 ## Test and evaluate the agent ## 
@@ -75,7 +78,7 @@ else:
 
 if Test_evaluation:
     print('Testing and evaluating the agent')
-    mean_rew, std_dev = evaluate_policy(model, env, n_eval_episodes=10, render=True) # Evaluate the model for 10 episodes and render the environment (render = True)pisodes = 5
+    mean_rew, std_dev = evaluate_policy(model, env1, n_eval_episodes=10, render=True) # Evaluate the model for 10 episodes and render the environment (render = True)pisodes = 5
     print(f'Mean reward: {mean_rew}, Standard deviation: {std_dev}')
     # output: mean reward and standard deviation. It gets +1 for each step the pole is up, and zero otherwise. The maximum score is 500 (max 500 steps per episode).
 
@@ -88,18 +91,17 @@ if Use_the_agent:
     print('Using the agent')
     episodes = 5
     for episode in range(1, episodes+1):
-        state = env.reset()
-        trun = False
+        state = env1.reset()
+        done = False
         score = 0
         
-        while not trun:
+        while not done:
             env.render()
-            action = env.action_space.sample()
-            obs, reward, done, trun, info = env.step(action)
+            action, _ = model.predict(state)  # Use the model to select an action
+            #print(action)
+            obs, reward, done, info = env1.step(action)
             score += reward
             
 
         print(f'Episode: {episode}, Score: {score}')
     env.close()
-
-
