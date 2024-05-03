@@ -16,7 +16,7 @@ MODEL_XML_PATH  = abspath
 class MujocoPyManipulateCableEnv(MujocoPySliderEnv, EzPickle):
     def __init__(self, reward_type="sparse", **kwargs):
         initial_qpos = {
-            "slider:joint": -0.3,
+            "slider:joint": -0.1,
         }
         MujocoPySliderEnv.__init__(
             self,
@@ -141,7 +141,7 @@ class MujocoManipulateCableEnv(MujocoSliderEnv, EzPickle):
     """
     def __init__(self, reward_type="sparse", **kwargs):
         initial_qpos = {
-            "slider:joint": -0.3,
+            "slider:joint": -0.1,
         }
         MujocoSliderEnv.__init__(
             self,

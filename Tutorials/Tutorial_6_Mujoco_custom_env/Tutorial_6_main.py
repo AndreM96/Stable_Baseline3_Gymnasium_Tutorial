@@ -7,6 +7,7 @@ import tensorboard
 
 from stable_baselines3 import PPO
 from stable_baselines3.common.vec_env import DummyVecEnv
+from stable_baselines3.common.monitor import Monitor
 from stable_baselines3.common.evaluation import evaluate_policy
 
 import numpy as np
@@ -70,7 +71,7 @@ else:
     print('Loading the model')
     env = Monitor(env, log_path) # Monitor the environment to log the training process and visualize it in tensorboard
     model = PPO.load(PPO_path,env=env)  # Load the model
-    env1 = model.get_env() # Get the environment used by the model
+    env1 = model.get_env() # Get the vectorized environment used by the model
 
 #################################
 ## Test and evaluate the agent ## 
@@ -91,17 +92,17 @@ if Use_the_agent:
     print('Using the agent')
     episodes = 5
     for episode in range(1, episodes+1):
-        state = env1.reset()
         done = False
+        state = None
+        obs = env1.reset()
         score = 0
         
         while not done:
-            env.render()
-            action, _ = model.predict(state)  # Use the model to select an action
-            #print(action)
+            env1.render()
+            action, _ = model.predict(obs)  # Use the model to select an action
             obs, reward, done, info = env1.step(action)
             score += reward
             
 
         print(f'Episode: {episode}, Score: {score}')
-    env.close()
+    env1.close()

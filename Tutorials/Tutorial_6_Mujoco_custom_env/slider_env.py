@@ -70,7 +70,10 @@ def get_base_slider_env(RobotEnvClass: Union[MujocoPyRobotEnv, MujocoRobotEnv]):
             # Compute distance between goal and the achieved goal.
             d = goal_distance(achieved_goal, goal)
             if self.reward_type == "sparse":
-                return -(d > self.distance_threshold).astype(np.float32)
+                if d < self.distance_threshold:
+                    return 1.0
+                else:
+                    return -(d > self.distance_threshold).astype(np.float32)
             else:
                 return -d
 
@@ -299,7 +302,7 @@ class MujocoSliderEnv(get_base_slider_env(MujocoRobotEnv)):
                 self.model, self.data,"slider:joint")
         #print("slider_qpos", slider_qpos)
         assert slider_qpos.shape == (1,)
-        #slider_qpos[:1] = slider_xpos
+        #slider_qpos = slider_xpos
         slider_qpos = slider_qpos + self.np_random.uniform(
                     -0.3, 0.1, size=1
                 ) #-0.3 and 0.1 are chosen because 0.69 is the x position of the slider in the xml file, the the initial q_pos is set to -0.1 so the initial position in the simulation of the slider is of 0.59.
