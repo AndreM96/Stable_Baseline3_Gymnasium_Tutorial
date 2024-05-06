@@ -41,7 +41,6 @@
         <joint kind="main" damping=".015"/>
         <geom type="capsule" size=".005" rgba=".8 .2 .1 1" condim="1"/>
       </composite>
-      <site name="cable:site" pos="0 0 0" rgba="1 0 0 1" size="0.02 0.02 0.02"></site>
     </body>
     <body mocap="true" name="slider:mocap" pos=".7 0 .6">
 		<geom conaffinity="0" contype="0" pos="0 0 0" rgba="0 0.5 0 0.7" size="0.005 0.005 0.005" type="box"></geom>
