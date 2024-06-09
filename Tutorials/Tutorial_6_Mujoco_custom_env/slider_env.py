@@ -37,23 +37,7 @@ def get_base_slider_env(RobotEnvClass: Union[MujocoPyRobotEnv, MujocoRobotEnv]):
             sld_range,
             **kwargs
         ):
-            """Initializes a new Fetch environment.
-
-            Args:
-                model_path (string): path to the environments XML file
-                n_substeps (int): number of substeps the simulation runs on every call to step
-                gripper_extra_height (float): additional height above the table when positioning the gripper
-                block_gripper (boolean): whether or not the gripper is blocked (i.e. not movable) or not
-                has_object (boolean): whether or not the environment has an object
-                target_in_the_air (boolean): whether or not the target should be in the air above the table or on the table surface
-                target_offset (float or array with 3 elements): offset of the target
-                obj_range (float): range of a uniform distribution for sampling initial object positions
-                target_range (float): range of a uniform distribution for sampling a target
-                distance_threshold (float): the threshold after which a goal is considered achieved
-                initial_qpos (dict): a dictionary of joint names and values that define the initial configuration
-                reward_type ('sparse' or 'dense'): the reward type, i.e. sparse or dense
-            """
-
+            
             self.sld_range = sld_range
             self.target_offset = target_offset
             self.target_range = target_range
@@ -146,6 +130,107 @@ def get_base_slider_env(RobotEnvClass: Union[MujocoPyRobotEnv, MujocoRobotEnv]):
     return BaseSliderEnv
 
 
+#print(help(MujocoPyRobotEnv))
+class MujocoSliderEnv(get_base_slider_env(MujocoRobotEnv)):
+    def __init__(self, default_camera_config: dict = DEFAULT_CAMERA_CONFIG, **kwargs):
+        super().__init__(default_camera_config=default_camera_config, **kwargs)
+
+    def _step_callback(self):
+        pass
+
+    def _set_action(self, action):
+        action = super()._set_action(action)
+
+        # Apply action to simulation.
+        self._utils.ctrl_set_action(self.model, self.data, action)
+        self._utils.mocap_set_action(self.model, self.data, action)
+
+    def generate_mujoco_observations(self):
+        # positions
+        slider_pos = self._utils.get_site_xpos(self.model, self.data,"slider:site")
+        
+        cable_pos = self._get_body_xpos("B_11")
+        dt = self.n_substeps * self.model.opt.timestep
+        slider_vel = self._utils.get_site_xvelp(self.model, self.data,"slider:site") * dt
+        site_id = mujoco.mj_name2id(self.model, mujoco.mjtObj.mjOBJ_SITE,"slider:site")
+       
+        #print("xvelp = ", self._utils.get_site_xvelp(self.model, self.data,"slider:site"))
+        
+
+        return (
+            slider_pos,
+            cable_pos,
+            slider_vel,
+        )
+
+    def _get_body_xpos(self,body_name):
+        body_id = self._model_names.body_name2id[body_name]
+        return self.data.xpos[body_id]
+
+    def _render_callback(self):
+        # Visualize target.
+        sites_offset = (self.data.site_xpos - self.model.site_pos).copy()
+        site_id = self._mujoco.mj_name2id(
+            self.model, self._mujoco.mjtObj.mjOBJ_SITE, "target0"
+        )
+        self.model.site_pos[site_id] = self.goal - sites_offset[0]
+        self._mujoco.mj_forward(self.model, self.data)
+
+    def _reset_sim(self):
+        self.data.time = self.initial_time
+        self.data.qpos[:] = np.copy(self.initial_qpos)
+        self.data.qvel[:] = np.copy(self.initial_qvel)
+        if self.model.na != 0:
+            self.data.act[:] = None
+
+        # Randomize start position of the slider.
+        
+        slider_qpos = self._utils.get_joint_qpos(
+                self.model, self.data,"slider:joint")
+        
+        assert slider_qpos.shape == (1,)
+        
+        slider_qpos = slider_qpos + self.np_random.uniform(
+                    -0.3, 0.1, size=1
+                ) #-0.3 and 0.1 are chosen because 0.69 is the x position of the slider in the xml file, the the initial q_pos is set to -0.1 so the initial position in the simulation of the slider is of 0.59.
+        # When startin a new simulation the slider_qpos value will be added to this value (0.59 + slider_qpos) this means that the slider will start at a point in a range of 0.29 and 0.69. In this way the cable will not start totally streched.  
+        self._utils.set_joint_qpos(
+                self.model, self.data,"slider:joint", slider_qpos)
+        
+        self._mujoco.mj_forward(self.model, self.data)
+        return True
+
+    def _env_setup(self, initial_qpos):
+        for name, value in initial_qpos.items():
+            self._utils.set_joint_qpos(self.model, self.data, name, value)
+        self._utils.reset_mocap_welds(self.model, self.data)
+        self._mujoco.mj_forward(self.model, self.data)
+
+        # Move end effector into position.
+        slider_target = np.array(
+            [0, 0, 0 ]
+        ) + self._utils.get_site_xpos(self.model, self.data, "slider:site")
+        slider_rotation = np.array([1.0, 0.0, 0.0, 0.0])
+        
+        self._utils.set_mocap_pos(self.model, self.data,"slider:mocap", slider_target)
+        self._utils.set_mocap_quat(
+            self.model, self.data,"slider:mocap", slider_rotation)
+
+        for _ in range(10):
+            self._mujoco.mj_step(self.model, self.data, nstep=self.n_substeps)
+
+        # Extract information for sampling goals.
+        self.initial_slider_xpos = self._utils.get_site_xpos(
+            self.model, self.data,"slider:site").copy()
+        self.initial_target_xpos = self._utils.get_site_xpos(
+            self.model, self.data,"target0").copy()
+
+
+
+
+
+
+#Left Just for completion of the tutorial but not used.
 class MujocoPySliderEnv(get_base_slider_env(MujocoPyRobotEnv)):
     def _step_callback(self):
         pass
@@ -188,7 +273,7 @@ class MujocoPySliderEnv(get_base_slider_env(MujocoPyRobotEnv)):
         self.sim.forward()
 
     def _viewer_setup(self):
-        lookat = self._get_slider_xpos()
+        lookat = self._get_body_xpos("slider")
         for idx, value in enumerate(lookat):
             self.viewer.cam.lookat[idx] = value
         assert self.viewer is not None
@@ -236,104 +321,3 @@ class MujocoPySliderEnv(get_base_slider_env(MujocoPyRobotEnv)):
         self.initial_slider_xpos = self.sim.data.get_site_xpos("slider:site").copy()
         self.initial_target_xpos = self.sim.data.get_site_xpos("target0").copy()
         
-
-#print(help(MujocoPyRobotEnv))
-class MujocoSliderEnv(get_base_slider_env(MujocoRobotEnv)):
-    def __init__(self, default_camera_config: dict = DEFAULT_CAMERA_CONFIG, **kwargs):
-        super().__init__(default_camera_config=default_camera_config, **kwargs)
-
-    def _step_callback(self):
-        pass
-
-    def _set_action(self, action):
-        action = super()._set_action(action)
-
-        # Apply action to simulation.
-        self._utils.ctrl_set_action(self.model, self.data, action)
-        self._utils.mocap_set_action(self.model, self.data, action)
-
-    def generate_mujoco_observations(self):
-        # positions
-        slider_pos = self._utils.get_site_xpos(self.model, self.data,"slider:site")
-        #cable_pos = self._utils.get_joint_qpos(self.model, self.data,"target0")
-        cable_pos = self._get_body_xpos("B_11")
-        dt = self.n_substeps * self.model.opt.timestep
-        slider_vel = self._utils.get_site_xvelp(self.model, self.data,"slider:site") * dt
-        site_id = mujoco.mj_name2id(self.model, mujoco.mjtObj.mjOBJ_SITE,"slider:site")
-        #print("site_id", site_id)
-        #print("xvelp = ", self._utils.get_site_xvelp(self.model, self.data,"slider:site"))
-        
-
-        return (
-            slider_pos,
-            cable_pos,
-            slider_vel,
-        )
-
-    def _get_slider_xpos(self):
-        body_id = self._model_names.body_name2id["slider"]
-        return self.data.xpos[body_id]
-    
-    def _get_body_xpos(self,body_name):
-        body_id = self._model_names.body_name2id[body_name]
-        return self.data.xpos[body_id]
-
-    def _render_callback(self):
-        # Visualize target.
-        sites_offset = (self.data.site_xpos - self.model.site_pos).copy()
-        site_id = self._mujoco.mj_name2id(
-            self.model, self._mujoco.mjtObj.mjOBJ_SITE, "target0"
-        )
-        self.model.site_pos[site_id] = self.goal - sites_offset[0]
-        self._mujoco.mj_forward(self.model, self.data)
-
-    def _reset_sim(self):
-        self.data.time = self.initial_time
-        self.data.qpos[:] = np.copy(self.initial_qpos)
-        self.data.qvel[:] = np.copy(self.initial_qvel)
-        if self.model.na != 0:
-            self.data.act[:] = None
-
-        # Randomize start position of the slider.
-        #slider_xpos = self.initial_slider_xpos[0] + self.np_random.uniform(
-        #            -self.sld_range, self.sld_range, size=1
-        #        )
-        slider_qpos = self._utils.get_joint_qpos(
-                self.model, self.data,"slider:joint")
-        #print("slider_qpos", slider_qpos)
-        assert slider_qpos.shape == (1,)
-        #slider_qpos = slider_xpos
-        slider_qpos = slider_qpos + self.np_random.uniform(
-                    -0.3, 0.1, size=1
-                ) #-0.3 and 0.1 are chosen because 0.69 is the x position of the slider in the xml file, the the initial q_pos is set to -0.1 so the initial position in the simulation of the slider is of 0.59.
-        # When startin a new simulation the slider_qpos value will be added to this value (0.59 + slider_qpos) this means that the slider will start at a point in a range of 0.29 and 0.69. In this way the cable will not start totally streched.  
-        self._utils.set_joint_qpos(
-                self.model, self.data,"slider:joint", slider_qpos)
-        
-        self._mujoco.mj_forward(self.model, self.data)
-        return True
-
-    def _env_setup(self, initial_qpos):
-        for name, value in initial_qpos.items():
-            self._utils.set_joint_qpos(self.model, self.data, name, value)
-        self._utils.reset_mocap_welds(self.model, self.data)
-        self._mujoco.mj_forward(self.model, self.data)
-
-        # Move end effector into position.
-        slider_target = np.array(
-            [0, 0, 0 ]
-        ) + self._utils.get_site_xpos(self.model, self.data, "slider:site")
-        slider_rotation = np.array([1.0, 0.0, 0.0, 0.0])
-        
-        self._utils.set_mocap_pos(self.model, self.data,"slider:mocap", slider_target)
-        self._utils.set_mocap_quat(
-            self.model, self.data,"slider:mocap", slider_rotation)
-
-        for _ in range(10):
-            self._mujoco.mj_step(self.model, self.data, nstep=self.n_substeps)
-
-        # Extract information for sampling goals.
-        self.initial_slider_xpos = self._utils.get_site_xpos(
-            self.model, self.data,"slider:site").copy()
-        self.initial_target_xpos = self._utils.get_site_xpos(
-            self.model, self.data,"target0").copy()

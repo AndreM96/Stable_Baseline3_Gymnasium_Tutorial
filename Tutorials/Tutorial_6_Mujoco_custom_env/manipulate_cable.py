@@ -13,26 +13,6 @@ MODEL_XML_PATH  = abspath
 #MODEL_XML_PATH = os.path.join("scene.xml")
 
 
-class MujocoPyManipulateCableEnv(MujocoPySliderEnv, EzPickle):
-    def __init__(self, reward_type="sparse", **kwargs):
-        initial_qpos = {
-            "slider:joint": -0.1,
-        }
-        MujocoPySliderEnv.__init__(
-            self,
-            model_path=MODEL_XML_PATH,
-            n_substeps=20,
-            target_offset=0.0,
-            sld_range=0.1,
-            target_range=[0.1, 0, 0.1],
-            distance_threshold=0.05,
-            initial_qpos=initial_qpos,
-            reward_type=reward_type,
-            **kwargs,
-        )
-        EzPickle.__init__(self, reward_type=reward_type, **kwargs)
-
-
 class MujocoManipulateCableEnv(MujocoSliderEnv, EzPickle):
     """
     ## Description
@@ -150,11 +130,23 @@ class MujocoManipulateCableEnv(MujocoSliderEnv, EzPickle):
             target_offset=0.0,
             sld_range=0.1,
             target_range=0.1,
-            distance_threshold=0.2,
+            distance_threshold=0.1,
             initial_qpos=initial_qpos,
             reward_type=reward_type,
             **kwargs,
         )
+        """Initializes a new Slider environment.
+
+            Args:
+                model_path (string): path to the environments XML file
+                n_substeps (int): number of substeps the simulation runs on every call to step
+                target_offset (float or array with 3 elements): offset of the target
+                sld_range (float): range of a uniform distribution for sampling a slider position
+                target_range (float): range of a uniform distribution for sampling a target
+                distance_threshold (float): the threshold after which a goal is considered achieved
+                initial_qpos (dict): a dictionary of joint names and values that define the initial configuration
+                reward_type ('sparse' or 'dense'): the reward type, i.e. sparse or dense
+            """
         EzPickle.__init__(self, reward_type=reward_type, **kwargs)
 
 
@@ -163,3 +155,27 @@ register(
     id='ManipulateCableEnv-v0',
     entry_point='manipulate_cable:MujocoManipulateCableEnv',
 )
+
+
+
+
+#Left Just for completion of the tutorial but not used.
+
+class MujocoPyManipulateCableEnv(MujocoPySliderEnv, EzPickle):
+    def __init__(self, reward_type="sparse", **kwargs):
+        initial_qpos = {
+            "slider:joint": -0.1,
+        }
+        MujocoPySliderEnv.__init__(
+            self,
+            model_path=MODEL_XML_PATH,
+            n_substeps=20,
+            target_offset=0.0,
+            sld_range=0.1,
+            target_range=[0.1, 0, 0.1],
+            distance_threshold=0.05,
+            initial_qpos=initial_qpos,
+            reward_type=reward_type,
+            **kwargs,
+        )
+        EzPickle.__init__(self, reward_type=reward_type, **kwargs)

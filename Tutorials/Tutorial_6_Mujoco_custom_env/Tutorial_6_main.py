@@ -15,7 +15,7 @@ import os
  
 Test_env = False
 Train_agent = False
-Test_evaluation = False
+Test_evaluation = True
 Use_the_agent = True
 
 print('Loading the environment')
@@ -25,7 +25,7 @@ env = gym.make('ManipulateCableEnv-v0', render_mode='human', max_episode_steps=1
 
 # Analize the environment
 #print(env.observation_space)
-print(env.action_space)
+#print(env.action_space)
 
 ##########################
 ## Test the environment ##
@@ -55,7 +55,7 @@ if Test_env:
 
 # first create folders to save the logs and the model (folder Training, subfolders Logs and Saved Models)
 log_path = os.path.join('Training', 'Logs')
-PPO_path = os.path.join('Training', 'Saved Models', 'PPO_Model_Cable_Manipulation')
+PPO_path = os.path.join('Training', 'Saved Models', 'PPO_Slider_tutorial')
 
 #env = DummyVecEnv([lambda: env]) # The environment must be wrapped in DummyVecEnv (vectorized environment) to be used with Stable Baselines. Lambda is used to create a function that returns the environment.
                                  # Here we did not vectorize the environment, see Tutorial 2. vectorize = run multiple environments in parallel, speeding up training
@@ -65,7 +65,7 @@ if Train_agent:
                                                                          # The tensorboard_log parameter allows to log the training process and visualize it in tensorboard.
     # help(PPO) # To see the documentation of the model
 
-    model.learn(total_timesteps=1000000) # Train the model for 20000 timesteps (iterations)   
+    model.learn(total_timesteps=300000) # Train the model for 20000 timesteps (iterations)   
     model.save(PPO_path) # Save the model
 else:
     print('Loading the model')
