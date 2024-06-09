@@ -15,7 +15,7 @@ import os
  
 Test_env = False
 Train_agent = False
-Test_evaluation = True
+Test_evaluation = False
 Use_the_agent = True
 
 print('Loading the environment')

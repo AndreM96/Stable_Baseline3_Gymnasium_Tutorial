@@ -153,7 +153,6 @@ class MujocoSliderEnv(get_base_slider_env(MujocoRobotEnv)):
         dt = self.n_substeps * self.model.opt.timestep
         slider_vel = self._utils.get_site_xvelp(self.model, self.data,"slider:site") * dt
         site_id = mujoco.mj_name2id(self.model, mujoco.mjtObj.mjOBJ_SITE,"slider:site")
-       
         #print("xvelp = ", self._utils.get_site_xvelp(self.model, self.data,"slider:site"))
         
 
@@ -173,7 +172,7 @@ class MujocoSliderEnv(get_base_slider_env(MujocoRobotEnv)):
         site_id = self._mujoco.mj_name2id(
             self.model, self._mujoco.mjtObj.mjOBJ_SITE, "target0"
         )
-        self.model.site_pos[site_id] = self.goal - sites_offset[0]
+        #self.model.site_pos[site_id] = self.goal - sites_offset[0]
         self._mujoco.mj_forward(self.model, self.data)
 
     def _reset_sim(self):
@@ -207,9 +206,7 @@ class MujocoSliderEnv(get_base_slider_env(MujocoRobotEnv)):
         self._mujoco.mj_forward(self.model, self.data)
 
         # Move end effector into position.
-        slider_target = np.array(
-            [0, 0, 0 ]
-        ) + self._utils.get_site_xpos(self.model, self.data, "slider:site")
+        slider_target =  self._utils.get_site_xpos(self.model, self.data, "slider:site")
         slider_rotation = np.array([1.0, 0.0, 0.0, 0.0])
         
         self._utils.set_mocap_pos(self.model, self.data,"slider:mocap", slider_target)
@@ -224,6 +221,7 @@ class MujocoSliderEnv(get_base_slider_env(MujocoRobotEnv)):
             self.model, self.data,"slider:site").copy()
         self.initial_target_xpos = self._utils.get_site_xpos(
             self.model, self.data,"target0").copy()
+        print("initial_target_xpos = ", self.initial_target_xpos)
 
 
 
