@@ -1,0 +1,3 @@
+Tue Apr 16 14:09:56 2024
+WARNING: mju_openResource: unknown file '/home/alemiu/RL_Mujoco/HelloWorldRLMujoco/scene.xml'
+
