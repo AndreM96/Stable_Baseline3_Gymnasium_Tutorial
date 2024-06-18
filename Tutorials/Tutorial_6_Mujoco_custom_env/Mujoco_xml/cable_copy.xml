@@ -61,7 +61,7 @@
     
   </worldbody>
   <equality>
-    <connect name="right_boundary" body1="B_last" body2="stop" anchor="0 0 0"/>
+    <connect name="right_boundary" body1="stop" body2="B_last" anchor="0 0 0"/>
     <weld body1="slider:mocap" body2="slider" solimp="0.9 0.95 0.001" solref="0.02 1"></weld>
   </equality>
   <contact>
