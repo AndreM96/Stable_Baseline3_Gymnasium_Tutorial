@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mujoco>
+    <compiler angle="radian" coordinate="local" meshdir="assets" autolimits = "true" balanceinertia = "true"></compiler>
+    <option timestep="0.002">
+        <flag warmstart="enable" refsafe = "enable"></flag>
+    </option>
+    <option integrator = "implicitfast"/> 
+    <option gravity = "0 0 -9.81"/>
+    
+
+    <visual>
+        <headlight diffuse="0.6 0.6 0.6" ambient="0.1 0.1 0.1" specular="0 0 0"/>
+        <rgba haze="0.15 0.25 0.35 1"/>
+        <global azimuth="120" elevation="-20"/>
+    </visual>
+
+    <asset>
+        <texture type="skybox" builtin="gradient" rgb1="0.3 0.5 0.7" rgb2="0 0 0" width="512" height="3072"/>
+        <texture type="2d" name="groundplane" builtin="checker" mark="edge" rgb1="0.2 0.3 0.4" rgb2="0.1 0.2 0.3"
+        markrgb="0.8 0.8 0.8" width="300" height="300"/>
+        <material name="groundplane" texture="groundplane" texuniform="true" texrepeat="5 5" reflectance="0.2"/>
+    </asset>
+
+    <extension>
+        <plugin plugin="mujoco.elasticity.cable"/>
+    </extension>
+	
+    <worldbody>
+        <light pos="0 0 1.5" dir="0 0 -1" directional="true"/>
+        <geom name="floor" pos="0 0 0" size="0 0 0.05" type="plane" material="groundplane"/>
+        <body name="floor" pos="0 0 0">
+        </body>
+
+        <body mocap="true" name="slider:mocap" pos="0. 0.25  0.60000000">
+		    <geom conaffinity="0" contype="0" pos="0 0 0" rgba="0 0.5 0 0.7" size="0.005 0.005 0.005" type="box"></geom>
+		    <geom conaffinity="0" contype="0" pos="0 0 0" rgba="0 0.5 0 0.1" size="1 0.005 0.005" type="box"></geom>
+		    <geom conaffinity="0" contype="0" pos="0 0 0" rgba="0 0.5 0 0.1" size="0.005 1 0.001" type="box"></geom>
+		    <geom conaffinity="0" contype="0" pos="0 0 0" rgba="0 0.5 0 0.1" size="0.005 0.005 1" type="box"></geom>
+	    </body>
+
+        <body>
+            <site name = "target0" type = "sphere" pos = "0 0.6 0.6" size = "0.05"  rgba = "1 0 0 1"/>
+        </body>
+
+        <body name = 'slider' pos = "0. 0.25 0.60000000">
+            <inertial mass = "0.5" pos = "0 0 0" diaginertia = "1 1 1"/>
+            <geom name = 'slider:geom' type = 'sphere' size = '0.02'  rgba = '1 1 1 1'/>
+            <joint name = 'slider:joint' type = 'free'/>
+            <site name = 'slider:site' pos = '0 0 0'/>
+
+            <body name="cable" pos="0 0 0" quat = "1 0 1 0">
+                <composite type="cable" curve="s" count="21 1 1" size="0.5" offset="0 0 0" initial="none">
+                    <plugin plugin="mujoco.elasticity.cable">
+                    <!--Units are in Pa (SI)-->
+                        <config key="twist" value="1e7"/>
+                        <config key="bend" value="4e6"/>
+                        <config key="vmax" value="0.05"/>
+                    </plugin>
+                    <joint kind="main" damping=".015"/>
+                    <geom type="capsule" size=".005" rgba="1 0 0 1" condim="1"/>
+                </composite>
+            </body>
+        </body>
+
+    </worldbody>
+
+    <equality>
+        <weld body1="slider:mocap" body2="slider" solimp = "0.9 0.95 0.001" solref = "0.02 1"/> 
+    </equality>
+
+    <contact>
+        <exclude body1 = "slider" body2 = "B_first"/>
+    </contact>
+
+    <actuator>
+        <motor name = 'x_ctrl' joint = 'slider:joint' gear = "1 0 0 0 0 0"/>
+        <motor name = 'y_ctrl' joint = 'slider:joint' gear = "0 1 0 0 0 0"/>
+        <motor name = 'z_ctrl' joint = 'slider:joint' gear = "0 0 1 0 0 0"/>
+    </actuator>
+    <!--solimp = "0.9 0.95 0.001 0.1 6" solref = "0.002 0.7"/-->
+    <!-- solimp="0.9 0.95 0.001" solref="0.0002 1"-->
+
+</mujoco>

@@ -121,7 +121,7 @@ class MujocoManipulateCableEnv(MujocoSliderEnv, EzPickle):
     """
     def __init__(self, reward_type="sparse", **kwargs):
         initial_qpos = {
-            "slider:joint": -0.1,
+            "slider:joint": 0.0,
         }
         MujocoSliderEnv.__init__(
             self,

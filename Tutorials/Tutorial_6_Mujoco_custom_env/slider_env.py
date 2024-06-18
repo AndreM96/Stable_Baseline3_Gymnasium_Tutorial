@@ -73,15 +73,14 @@ def get_base_slider_env(RobotEnvClass: Union[MujocoPyRobotEnv, MujocoRobotEnv]):
             pos_ctrl = action[:]
             y_z_coord = np.array([0.0, 0.6])
             pos_ctrl = np.concatenate((pos_ctrl, y_z_coord))
-            pos_ctrl[0] *= 0.5  # limit maximum change in position
+            #pos_ctrl[0] *= 0.5  # limit maximum change in position
             rot_ctrl = [
-                0.0,
-                0.0,
-                0.0,
-                1.0,
+                1.0, #w
+                0.0, #x
+                0.0, #y
+                0.0, #z
             ]  # fixed rotation of the end effector, expressed as a quaternion
-            garbage = np.zeros(2)
-            action = np.concatenate([pos_ctrl, rot_ctrl, garbage])
+            action = np.concatenate([pos_ctrl, rot_ctrl])
 
             return action
 
@@ -130,7 +129,6 @@ def get_base_slider_env(RobotEnvClass: Union[MujocoPyRobotEnv, MujocoRobotEnv]):
     return BaseSliderEnv
 
 
-#print(help(MujocoPyRobotEnv))
 class MujocoSliderEnv(get_base_slider_env(MujocoRobotEnv)):
     def __init__(self, default_camera_config: dict = DEFAULT_CAMERA_CONFIG, **kwargs):
         super().__init__(default_camera_config=default_camera_config, **kwargs)
@@ -138,11 +136,27 @@ class MujocoSliderEnv(get_base_slider_env(MujocoRobotEnv)):
     def _step_callback(self):
         pass
 
+    def _mocap_aid(self, action):
+        # Controller which realizes gravity compensation
+        #action = super()._set_action(action)
+        #self.q_ref = self.data.qpos[2] + action[2]
+        self.q_ref += action[0]
+        print("q_ref = ", self.q_ref)
+        # if np.abs(action[2]) < 1e-6:
+        #     self.q_ref = self.q_ref_prev
+        # else:
+        #     self.q_ref = self.data.qpos[2]
+        #     self.q_ref_prev = self.q_re
+        Kp = 13035
+        self.data.ctrl[0] = -Kp * (self.data.qpos[0] - self.q_ref) + self.data.qfrc_bias[0] 
+
+
     def _set_action(self, action):
         action = super()._set_action(action)
 
         # Apply action to simulation.
-        self._utils.ctrl_set_action(self.model, self.data, action)
+        self._mocap_aid(action)
+        #self._utils.ctrl_set_action(self.model, self.data, action)
         self._utils.mocap_set_action(self.model, self.data, action)
 
     def generate_mujoco_observations(self):
@@ -155,6 +169,7 @@ class MujocoSliderEnv(get_base_slider_env(MujocoRobotEnv)):
         site_id = mujoco.mj_name2id(self.model, mujoco.mjtObj.mjOBJ_SITE,"slider:site")
         #print("xvelp = ", self._utils.get_site_xvelp(self.model, self.data,"slider:site"))
         
+        print("slider_pos = ", slider_pos)
 
         return (
             slider_pos,
@@ -184,14 +199,17 @@ class MujocoSliderEnv(get_base_slider_env(MujocoRobotEnv)):
 
         # Randomize start position of the slider.
         
+        
         slider_qpos = self._utils.get_joint_qpos(
                 self.model, self.data,"slider:joint")
+        self.q_ref = slider_qpos
+        print("q_ref reset = ", self.q_ref)
         
         assert slider_qpos.shape == (1,)
         
-        slider_qpos = slider_qpos + self.np_random.uniform(
-                    -0.3, 0.1, size=1
-                ) #-0.3 and 0.1 are chosen because 0.69 is the x position of the slider in the xml file, the the initial q_pos is set to -0.1 so the initial position in the simulation of the slider is of 0.59.
+        # slider_qpos = slider_qpos + self.np_random.uniform(
+        #             -0.3, 0.1, size=1
+        #         ) #-0.3 and 0.1 are chosen because 0.69 is the x position of the slider in the xml file, the the initial q_pos is set to -0.1 so the initial position in the simulation of the slider is of 0.59.
         # When startin a new simulation the slider_qpos value will be added to this value (0.59 + slider_qpos) this means that the slider will start at a point in a range of 0.29 and 0.69. In this way the cable will not start totally streched.  
         self._utils.set_joint_qpos(
                 self.model, self.data,"slider:joint", slider_qpos)
@@ -219,9 +237,10 @@ class MujocoSliderEnv(get_base_slider_env(MujocoRobotEnv)):
         # Extract information for sampling goals.
         self.initial_slider_xpos = self._utils.get_site_xpos(
             self.model, self.data,"slider:site").copy()
+        print("initial_slider_xpos = ", self.initial_slider_xpos)
         self.initial_target_xpos = self._utils.get_site_xpos(
             self.model, self.data,"target0").copy()
-        print("initial_target_xpos = ", self.initial_target_xpos)
+        #print("initial_target_xpos = ", self.initial_target_xpos)
 
 
 

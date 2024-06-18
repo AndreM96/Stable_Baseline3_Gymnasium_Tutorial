@@ -1,6 +1,6 @@
 <mujoco model="ur5e scene">
   <!-- <include file="ur5e.xml"/> -->
-  <include file="cable.xml"/> 
+  <include file="cable_copy.xml"/> 
   <statistic center="0.3 0 0.4" extent="0.8"/>
 
   <visual>

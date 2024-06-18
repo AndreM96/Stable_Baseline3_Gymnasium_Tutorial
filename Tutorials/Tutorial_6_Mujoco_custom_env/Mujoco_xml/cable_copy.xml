@@ -34,35 +34,41 @@
       <joint name="slider:joint" type="slide" axis="1 0 0" damping=".1"/>
       <geom size=".01"/>
       <site name="slider:site" pos="0 0 0" rgba="0 0 0 0" size="0.02 0.02 0.02"></site>
+      <body name="cable" pos="0 0 0">
+        <composite type="cable" curve="s" count="21 1 1" size="1" offset="0 0 0" initial="none">
+          <plugin plugin="mujoco.elasticity.cable">
+            <!--Units are in Pa (SI)-->
+            <config key="twist" value="1e7"/>
+            <config key="bend" value="4e6"/>
+            <config key="vmax" value="0.05"/>
+          </plugin>
+          <joint kind="main" damping=".015"/>
+          <geom type="capsule" size=".005" rgba=".8 .2 .1 1" condim="1"/>
+        </composite>
+      </body>
     </body>
-    <body name="cable" pos="0 0 0">
-      <composite type="cable" curve="s" count="21 1 1" size="1" offset="-.3 0 .6" initial="none">
-        <plugin plugin="mujoco.elasticity.cable">
-          <!--Units are in Pa (SI)-->
-          <config key="twist" value="1e7"/>
-          <config key="bend" value="4e6"/>
-          <config key="vmax" value="0.05"/>
-        </plugin>
-        <joint kind="main" damping=".015"/>
-        <geom type="capsule" size=".005" rgba=".8 .2 .1 1" condim="1"/>
-      </composite>
-    </body>
+  
     <body mocap="true" name="slider:mocap" pos=".2 0 .6">
 		<geom conaffinity="0" contype="0" pos="0 0 0" rgba="0 0.5 0 0.7" size="0.005 0.005 0.005" type="box"></geom>
 		<geom conaffinity="0" contype="0" pos="0 0 0" rgba="0 0.5 0 0.1" size="1 0.005 0.005" type="box"></geom>
 		<geom conaffinity="0" contype="0" pos="0 0 0" rgba="0 0.5 0 0.1" size="0.005 1 0.001" type="box"></geom>
 		<geom conaffinity="0" contype="0" pos="0 0 0" rgba="0 0.5 0 0.1" size="0.005 0.005 1" type="box"></geom>
 	  </body>
+    <body name="stop" pos="1.2 0 .6">
+      <geom size=".01"/>
+      <site name="stop:site" pos="0 0 0" rgba="0 1 0 0" size="0.02 0.02 0.02"></site>
+    </body>
     
   </worldbody>
   <equality>
-    <connect name="right_boundary" body1="B_last" body2="slider" anchor="0 0 0"/>
+    <connect name="right_boundary" body1="B_last" body2="stop" anchor="0 0 0"/>
     <weld body1="slider:mocap" body2="slider" solimp="0.9 0.95 0.001" solref="0.02 1"></weld>
   </equality>
   <contact>
-    <exclude body1="B_last" body2="slider"/>
+    <exclude body1="B_last" body2="stop"/>
+    <exclude body1="slider" body2="B_first"/>
   </contact>
   <actuator>
-        <motor name = 'x_ctrl' joint = 'slider:joint' gear = "1 0 0 0 0 0"/>
+        <general name = 'x_ctrl' joint = 'slider:joint' gear = "1 0 0 0 0 0"/>
     </actuator>
 </mujoco>

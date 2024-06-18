@@ -13,10 +13,10 @@ from stable_baselines3.common.evaluation import evaluate_policy
 import numpy as np
 import os
  
-Test_env = False
+Test_env = True
 Train_agent = False
 Test_evaluation = False
-Use_the_agent = True
+Use_the_agent = False
 
 print('Loading the environment')
 
@@ -41,7 +41,8 @@ if Test_env:
         
         while not trun:
             env.render()
-            action = env.action_space.sample()
+            action = [0.01]
+            #action = env.action_space.sample()
             obs, reward, done, trun, info = env.step(action)
             score += reward
             
@@ -55,7 +56,7 @@ if Test_env:
 
 # first create folders to save the logs and the model (folder Training, subfolders Logs and Saved Models)
 log_path = os.path.join('Training', 'Logs')
-PPO_path = os.path.join('Training', 'Saved Models', 'PPO_Slider_tutorial')
+PPO_path = os.path.join('Training', 'Saved Models', 'PPO_Slider_tutorial_1')
 
 #env = DummyVecEnv([lambda: env]) # The environment must be wrapped in DummyVecEnv (vectorized environment) to be used with Stable Baselines. Lambda is used to create a function that returns the environment.
                                  # Here we did not vectorize the environment, see Tutorial 2. vectorize = run multiple environments in parallel, speeding up training
