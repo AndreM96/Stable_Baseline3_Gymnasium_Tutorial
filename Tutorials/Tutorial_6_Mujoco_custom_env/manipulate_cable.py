@@ -173,7 +173,7 @@ class MujocoPyManipulateCableEnv(MujocoPySliderEnv, EzPickle):
             target_offset=0.0,
             sld_range=0.1,
             target_range=[0.1, 0, 0.1],
-            distance_threshold=0.05,
+            distance_threshold=0.02,
             initial_qpos=initial_qpos,
             reward_type=reward_type,
             **kwargs,

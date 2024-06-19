@@ -13,15 +13,15 @@ from stable_baselines3.common.evaluation import evaluate_policy
 import numpy as np
 import os
  
-Test_env = True
-Train_agent = False
+Test_env = False
+Train_agent = True
 Test_evaluation = False
 Use_the_agent = False
 
 print('Loading the environment')
 
 #When train the model remember to change the render_mode to 'rgb_array' to not visualize the environment and reduce the computation time
-env = gym.make('ManipulateCableEnv-v0', render_mode='human', max_episode_steps=40)
+env = gym.make('ManipulateCableEnv-v0', render_mode='rgb_array', max_episode_steps=100)
 
 # Analize the environment
 #print(env.observation_space)
@@ -41,8 +41,8 @@ if Test_env:
         
         while not trun:
             env.render()
-            action = [0.01]
-            #action = env.action_space.sample()
+            #action = [0.01]
+            action = env.action_space.sample()
             obs, reward, done, trun, info = env.step(action)
             score += reward
             

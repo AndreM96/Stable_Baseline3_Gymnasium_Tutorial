@@ -73,7 +73,7 @@ def get_base_slider_env(RobotEnvClass: Union[MujocoPyRobotEnv, MujocoRobotEnv]):
             pos_ctrl = action[:]
             y_z_coord = np.array([0.0, 0.6])
             pos_ctrl = np.concatenate((pos_ctrl, y_z_coord))
-            #pos_ctrl[0] *= 0.5  # limit maximum change in position
+            pos_ctrl[0] *= 0.5  # limit maximum change in position
             rot_ctrl = [
                 1.0, #w
                 0.0, #x
@@ -141,7 +141,6 @@ class MujocoSliderEnv(get_base_slider_env(MujocoRobotEnv)):
         #action = super()._set_action(action)
         #self.q_ref = self.data.qpos[2] + action[2]
         self.q_ref += action[0]
-        print("q_ref = ", self.q_ref)
         # if np.abs(action[2]) < 1e-6:
         #     self.q_ref = self.q_ref_prev
         # else:
@@ -169,7 +168,6 @@ class MujocoSliderEnv(get_base_slider_env(MujocoRobotEnv)):
         site_id = mujoco.mj_name2id(self.model, mujoco.mjtObj.mjOBJ_SITE,"slider:site")
         #print("xvelp = ", self._utils.get_site_xvelp(self.model, self.data,"slider:site"))
         
-        print("slider_pos = ", slider_pos)
 
         return (
             slider_pos,
@@ -203,7 +201,6 @@ class MujocoSliderEnv(get_base_slider_env(MujocoRobotEnv)):
         slider_qpos = self._utils.get_joint_qpos(
                 self.model, self.data,"slider:joint")
         self.q_ref = slider_qpos
-        print("q_ref reset = ", self.q_ref)
         
         assert slider_qpos.shape == (1,)
         
@@ -237,7 +234,7 @@ class MujocoSliderEnv(get_base_slider_env(MujocoRobotEnv)):
         # Extract information for sampling goals.
         self.initial_slider_xpos = self._utils.get_site_xpos(
             self.model, self.data,"slider:site").copy()
-        print("initial_slider_xpos = ", self.initial_slider_xpos)
+        #print("initial_slider_xpos = ", self.initial_slider_xpos)
         self.initial_target_xpos = self._utils.get_site_xpos(
             self.model, self.data,"target0").copy()
         #print("initial_target_xpos = ", self.initial_target_xpos)
