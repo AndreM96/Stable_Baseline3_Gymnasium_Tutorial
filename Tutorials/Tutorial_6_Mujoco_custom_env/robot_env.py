@@ -85,7 +85,7 @@ class BaseRobotEnv(GoalEnv):
             int(np.round(1.0 / self.dt)) == self.metadata["render_fps"]
         ), f'Expected value: {int(np.round(1.0 / self.dt))}, Actual value: {self.metadata["render_fps"]}'
 
-        self.action_space = spaces.Box(-0.2, 0.2, shape=(self.n_actions,), dtype="float32")
+        self.action_space = spaces.Box(-0.02, 0.02, shape=(self.n_actions,), dtype="float32")
         self.observation_space = spaces.Dict(
             dict(
                 desired_goal=spaces.Box(

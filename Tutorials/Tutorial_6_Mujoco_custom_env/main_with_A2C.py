@@ -18,9 +18,9 @@ import os
  
 if __name__ == '__main__':
     Test_env = False
-    Train_agent = False
+    Train_agent = True
     Test_evaluation = False
-    Use_the_agent = True
+    Use_the_agent = False
     Train_with_callbacks = False
     Train_with_mod_NN = False
     Train_with_diff_alg = False
@@ -60,13 +60,13 @@ if __name__ == '__main__':
     ###############################
     ## Vectorise the environment ##
     ###############################
-    env8 = make_vec_env("ManipulateCableEnv-v0", n_envs=4, vec_env_cls=SubprocVecEnv)
-    env8 = VecFrameStack(env8, n_stack=4) # stack envs together
-    env8.metadata['render_fps'] = 30 # set fps for rendering
+    env4 = make_vec_env("ManipulateCableEnv-v0", n_envs=4, vec_env_cls=SubprocVecEnv)
+    env4 = VecFrameStack(env4, n_stack=4) # stack envs together
+    env4.metadata['render_fps'] = 30 # set fps for rendering
 
 
-    env8.reset()
-    env8.render('rgb_array')
+    env4.reset()
+    env4.render('rgb_array')
 
     #################
     ## Train Model ##
@@ -74,15 +74,15 @@ if __name__ == '__main__':
 
     log_path = os.path.join('Training', 'Logs')
     A2C_path = os.path.join('Training', 'Saved Models', 'A2C_Model_Breakout')
-    model = A2C("MultiInputPolicy", env8, verbose=1, tensorboard_log=log_path) # The A2C algorithm is used to train the model. The policy is a MultiInputPolicy. The device is the CPU.
+    model = A2C("MultiInputPolicy", env4, verbose=1, tensorboard_log=log_path) # The A2C algorithm is used to train the model. The policy is a MultiInputPolicy. The device is the CPU.
 
     if Train_agent:
         print('Training the agent')
-        model.learn(total_timesteps=500000)
+        model.learn(total_timesteps=10000)
         model.save(A2C_path)
     else:
         print('Loading the agent')
-        model = A2C.load(A2C_path, env=env8)
+        model = A2C.load(A2C_path, env=env4)
 
     ###################
     ## Use the agent ## 

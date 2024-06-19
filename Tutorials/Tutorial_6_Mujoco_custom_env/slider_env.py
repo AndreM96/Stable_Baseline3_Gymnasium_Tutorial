@@ -4,7 +4,7 @@ import numpy as np
 
 #from gymnasium_robotics.envs.robot_env import MujocoPyRobotEnv, MujocoRobotEnv
 from robot_env import MujocoPyRobotEnv, MujocoRobotEnv
-from gymnasium_robotics.utils import rotations
+from gymnasium_robotics.utils import mujoco_utils
 import mujoco
 
 DEFAULT_CAMERA_CONFIG = {
@@ -19,6 +19,11 @@ def goal_distance(goal_a, goal_b):
     assert goal_a.shape == goal_b.shape
     return np.linalg.norm(goal_a - goal_b, axis=-1)
 
+
+def get_body_xpos(model,data,body_name):
+        names = mujoco_utils.MujocoModelNames(model)
+        body_id = names.body_name2id[body_name]
+        return data.xpos[body_id]
 
 def get_base_slider_env(RobotEnvClass: Union[MujocoPyRobotEnv, MujocoRobotEnv]):
     """Factory function that returns a BaseSliderEnv class that inherits
@@ -53,14 +58,23 @@ def get_base_slider_env(RobotEnvClass: Union[MujocoPyRobotEnv, MujocoRobotEnv]):
         def compute_reward(self, achieved_goal, goal, info):
             # Compute distance between goal and the achieved goal.
             d = goal_distance(achieved_goal, goal)
+            slider_pos = get_body_xpos(self.model, self.data, "slider")
+            stop_pos = get_body_xpos(self.model, self.data,"stop")
+            d_cable = goal_distance(stop_pos, slider_pos)
             if self.reward_type == "sparse":
                 if d < self.distance_threshold:
-                    return 1.0
+                    return 10
+                elif d_cable >= 0.9999:
+                    return -100
                 else:
                     return -(d > self.distance_threshold).astype(np.float32)
             else:
                 return -d
-
+        def compute_truncated(self, achievec_goal, desired_goal, info):
+            slider_pos = get_body_xpos(self.model, self.data,"slider")
+            stop_pos = get_body_xpos(self.model, self.data, "stop")
+            d_cable = goal_distance(slider_pos, stop_pos)
+            return True if d_cable > 1 else False
         # RobotEnv methods
         # ----------------------------
 
@@ -71,9 +85,9 @@ def get_base_slider_env(RobotEnvClass: Union[MujocoPyRobotEnv, MujocoRobotEnv]):
             )  # ensure that we don't change the action outside of this scope
             #pos_ctrl = self.initial_slider_xpos + action[:]
             pos_ctrl = action[:]
-            y_z_coord = np.array([0.0, 0.6])
+            y_z_coord = np.array([0.0, 0.0])
             pos_ctrl = np.concatenate((pos_ctrl, y_z_coord))
-            pos_ctrl[0] *= 0.5  # limit maximum change in position
+            #pos_ctrl[0] *= 0.02  # limit maximum change in position
             rot_ctrl = [
                 1.0, #w
                 0.0, #x
@@ -111,10 +125,6 @@ def get_base_slider_env(RobotEnvClass: Union[MujocoPyRobotEnv, MujocoRobotEnv]):
 
             raise NotImplementedError
 
-        def _get_gripper_xpos(self):
-
-            raise NotImplementedError
-
         def _sample_goal(self):
             
             goal = self.initial_target_xpos[:3] #+ self.np_random.uniform(
@@ -126,6 +136,7 @@ def get_base_slider_env(RobotEnvClass: Union[MujocoPyRobotEnv, MujocoRobotEnv]):
             d = goal_distance(achieved_goal, desired_goal)
             return (d < self.distance_threshold).astype(np.float32)
 
+        
     return BaseSliderEnv
 
 
@@ -162,7 +173,7 @@ class MujocoSliderEnv(get_base_slider_env(MujocoRobotEnv)):
         # positions
         slider_pos = self._utils.get_site_xpos(self.model, self.data,"slider:site")
         
-        cable_pos = self._get_body_xpos("B_11")
+        cable_pos = get_body_xpos(self.model, self.data,"B_11")
         dt = self.n_substeps * self.model.opt.timestep
         slider_vel = self._utils.get_site_xvelp(self.model, self.data,"slider:site") * dt
         site_id = mujoco.mj_name2id(self.model, mujoco.mjtObj.mjOBJ_SITE,"slider:site")
@@ -175,9 +186,7 @@ class MujocoSliderEnv(get_base_slider_env(MujocoRobotEnv)):
             slider_vel,
         )
 
-    def _get_body_xpos(self,body_name):
-        body_id = self._model_names.body_name2id[body_name]
-        return self.data.xpos[body_id]
+    
 
     def _render_callback(self):
         # Visualize target.
@@ -260,7 +269,7 @@ class MujocoPySliderEnv(get_base_slider_env(MujocoPyRobotEnv)):
         # positions
         slider_pos = self.sim.data.get_site_xpos("slider:site")
         #cable_pos = self.sim.data.get_joint_qpos("target0") #before B_11
-        cable_pos = self._get_body_xpos("B11")
+        cable_pos = get_body_xpos(self.model, self.data, "B11")
         dt = self.sim.nsubsteps * self.sim.model.opt.timestep
         slider_vel = self.sim.data.get_site_xvelp("slider:site") * dt
         
